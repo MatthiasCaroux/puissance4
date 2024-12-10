@@ -3,6 +3,7 @@ import java.util.List;
 
 public class Plateau {
     private List<List<Case>> plateau;
+    private char couleurCourante;
 
     public Plateau() {
         plateau = new ArrayList<>();
@@ -13,6 +14,7 @@ public class Plateau {
             }
             plateau.add(ligne);
         }
+        this.couleurCourante = 'R';
     }
 
     public void afficher() {
@@ -29,14 +31,57 @@ public class Plateau {
         return plateau.get(i).get(j).getEtat();
     }
 
-    public void jouer(char couleur, int colonne) {
+    public void jouer(int colonne) {
         for (int i = 5; i >= 0; i--) {
             for (int j = 0; j < 7; j++) {
                 if (j == colonne && this.getEtat(i, j) == 'V') {
-                    plateau.get(i).get(j).jouer(couleur);
+                    plateau.get(i).get(j).jouer(this.couleurCourante);
+                    this.changerCouleurCourante();
                     return;
                 }
             }
         }
     }
+
+    public void changerCouleurCourante() {
+        if (this.couleurCourante == 'R') {
+            this.couleurCourante = 'J';
+        } else {
+            this.couleurCourante = 'R';
+        }
+    }
+
+
+    public boolean estGagne() {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 7; j++) {
+                char couleur = this.getEtat(i, j);
+                if (couleur != 'V') {
+                    // Vérification horizontale
+                    if (j + 3 < 7 && couleur == this.getEtat(i, j + 1) && couleur == this.getEtat(i, j + 2) && couleur == this.getEtat(i, j + 3)) {
+                        return true;
+                    }
+                    // Vérification verticale
+                    if (i + 3 < 6 && couleur == this.getEtat(i + 1, j) && couleur == this.getEtat(i + 2, j) && couleur == this.getEtat(i + 3, j)) {
+                        return true;
+                    }
+                    // Vérification diagonale montante
+                    if (i + 3 < 6 && j + 3 < 7 && couleur == this.getEtat(i + 1, j + 1) && couleur == this.getEtat(i + 2, j + 2) && couleur == this.getEtat(i + 3, j + 3)) {
+                        return true;
+                    }
+                    // Vérification diagonale descendante
+                    if (i + 3 < 6 && j - 3 >= 0 && couleur == this.getEtat(i + 1, j - 1) && couleur == this.getEtat(i + 2, j - 2) && couleur == this.getEtat(i + 3, j - 3)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
+    public char getCouleurCourante() {
+        return this.couleurCourante;
+    }
+    
 }
