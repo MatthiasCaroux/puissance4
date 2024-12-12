@@ -4,7 +4,9 @@ import java.util.Scanner;
 
 public class Client {
     public static void main(String[] args) {
-        String host = "localhost";
+        // Remplacez cette IP par l'adresse IP de la machine serveur
+        // Par exemple "192.168.1.10"
+        String host = "192.168.1.10";
         int port = 5555;
 
         try (Socket socket = new Socket(host, port);
@@ -16,12 +18,12 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
 
             while (true) {
-                System.out.print("Entrez une commande : ");
+                System.out.print("Entrez une commande (ou QUIT pour sortir) : ");
                 String command = scanner.nextLine().trim();
 
                 writer.println(command);
                 String response = reader.readLine();
-                System.out.println(response);
+                System.out.println("Réponse du serveur : " + response);
 
                 if (command.equalsIgnoreCase("QUIT")) {
                     break;

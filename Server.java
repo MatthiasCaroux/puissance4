@@ -40,8 +40,9 @@ public class Server {
                     String[] command = line.trim().split("\\s+");
                     if (command.length == 0) continue;
 
+                    // Pour l'instant on fait un echo de la première commande
                     String action = command[0];
-                    writer.println(command[0]);
+                    writer.println("Commande reçue : " + action);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
