@@ -1,11 +1,5 @@
-import java.util.ArrayList;
-import java.util.List;
-
-public class Plateau {
-    private List<List<Case>> plateau;
-    private char couleurCourante;
-
-    public Plateau() {
+class Plateau
+!!!128770.java!!!	Plateau()
         plateau = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
             List<Case> ligne = new ArrayList<>();
@@ -15,9 +9,7 @@ public class Plateau {
             plateau.add(ligne);
         }
         this.couleurCourante = 'R';
-    }
-
-    public void afficher() {
+!!!128898.java!!!	afficher() : void
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 7; j++) {
                 plateau.get(i).get(j).afficher();
@@ -25,58 +17,42 @@ public class Plateau {
             System.out.println();
         }
         System.out.println("-----------------");
-    }
-
-    public char getEtat(int i, int j) {
+!!!129026.java!!!	getEtat(in i : int, in j : int) : char
         return plateau.get(i).get(j).getEtat();
-    }
-
-    public void jouer(int colonne) {
+!!!129154.java!!!	jouer(in colonne : int) : void
         for (int i = 5; i >= 0; i--) {
             for (int j = 0; j < 7; j++) {
                 if (j == colonne && this.getEtat(i, j) == 'V') {
-                    if (colonne >= 0 && colonne < 7) {
-                        plateau.get(i).get(j).jouer(this.couleurCourante);
-                        this.changerCouleurCourante();
-                        return;
-                        }
-                    else {
-                        System.out.println("Colonne invalide");
-                        
-                    }
-
+                    plateau.get(i).get(j).jouer(this.couleurCourante);
+                    this.changerCouleurCourante();
+                    return;
                 }
             }
         }
-    }
-
-    public void changerCouleurCourante() {
+!!!129282.java!!!	changerCouleurCourante() : void
         if (this.couleurCourante == 'R') {
             this.couleurCourante = 'J';
         } else {
             this.couleurCourante = 'R';
         }
-    }
-
-
-    public boolean estGagne() {
+!!!129410.java!!!	estGagne() : boolean
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 7; j++) {
                 char couleur = this.getEtat(i, j);
                 if (couleur != 'V') {
-                    // VÃ©rification horizontale
+                    // Vérification horizontale
                     if (j + 3 < 7 && couleur == this.getEtat(i, j + 1) && couleur == this.getEtat(i, j + 2) && couleur == this.getEtat(i, j + 3)) {
                         return true;
                     }
-                    // VÃ©rification verticale
+                    // Vérification verticale
                     if (i + 3 < 6 && couleur == this.getEtat(i + 1, j) && couleur == this.getEtat(i + 2, j) && couleur == this.getEtat(i + 3, j)) {
                         return true;
                     }
-                    // VÃ©rification diagonale montante
+                    // Vérification diagonale montante
                     if (i + 3 < 6 && j + 3 < 7 && couleur == this.getEtat(i + 1, j + 1) && couleur == this.getEtat(i + 2, j + 2) && couleur == this.getEtat(i + 3, j + 3)) {
                         return true;
                     }
-                    // VÃ©rification diagonale descendante
+                    // Vérification diagonale descendante
                     if (i + 3 < 6 && j - 3 >= 0 && couleur == this.getEtat(i + 1, j - 1) && couleur == this.getEtat(i + 2, j - 2) && couleur == this.getEtat(i + 3, j - 3)) {
                         return true;
                     }
@@ -84,23 +60,14 @@ public class Plateau {
             }
         }
         return false;
-    }
-
-
-    public char getCouleurCourante() {
+!!!129538.java!!!	getCouleurCourante() : char
         return this.couleurCourante;
-    }
-
-    @Override
-    public String toString(){
+!!!129666.java!!!	toString() : String
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 7; j++) {
-                sb.append(plateau.get(i).get(j).toString());
+                sb.append(plateau.get(i).get(j).getEtat());
             }
             sb.append("\n");
         }
         return sb.toString();
-    }
-    
-}

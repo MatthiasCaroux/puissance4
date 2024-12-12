@@ -1,0 +1,34 @@
+class Case
+!!!128002.java!!!	Case()
+        etat = etat.VIDE;
+!!!128130.java!!!	afficher() : void
+        switch (etat) {
+            case ROUGE:
+                System.out.print("R ");
+                break;
+            case JAUNE:
+                System.out.print("J ");
+                break;
+            case VIDE:
+                System.out.print("[] ");
+                break;
+        }
+!!!128258.java!!!	jouer(in couleur : char) : void
+        switch (couleur) {
+            case 'R':
+                etat = etat.ROUGE;
+                break;
+            case 'J':
+                etat = etat.JAUNE;
+                break;
+        }
+!!!128386.java!!!	getEtat() : char
+        switch (this.etat) {
+            case ROUGE:
+                return 'R';
+            case JAUNE:
+                return 'J';
+            default:
+                break;
+        }
+        return 'V';

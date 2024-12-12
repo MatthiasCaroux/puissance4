@@ -1,0 +1,46 @@
+format 224
+
+classcanvas 128002 class_ref 128002 // Case
+  classdiagramsettings member_max_width 0 end
+  xyz 575 100 2000
+end
+classcanvas 128130 class_ref 128258 // Client
+  classdiagramsettings member_max_width 0 end
+  xyz 52 265 2000
+end
+classcanvas 128386 class_ref 128514 // Plateau
+  classdiagramsettings member_max_width 0 end
+  xyz 391 332 2000
+end
+classcanvas 128770 class_ref 128130 // etat
+  classdiagramsettings member_max_width 0 end
+  xyz 339 100 2006
+end
+classcanvas 129154 class_ref 128770 // ClientHandler
+  classdiagramsettings member_max_width 0 end
+  xyz 27 371 3011
+end
+classcanvas 129410 class_ref 128642 // Server
+  classdiagramsettings member_max_width 0 end
+  xyz 195 359 3017
+end
+line 128898 ---+
+  from ref 128770 z 2007 to ref 128002
+relationcanvas 129026 relation_ref 128002 // <unidirectional association>
+  from ref 128002 z 2007 to ref 128770
+  role_a_pos 419 128 3000 no_role_b
+  no_multiplicity_a no_multiplicity_b
+end
+relationcanvas 129538 relation_ref 128130 // <unidirectional association>
+  from ref 129410 z 3018 to ref 128386
+  role_a_pos 341 399 3000 no_role_b
+  no_multiplicity_a no_multiplicity_b
+end
+line 129666 ---+
+  from ref 129154 z 3018 to ref 129410
+relationcanvas 130050 relation_ref 128386 // <association>
+  from ref 128386 z 2001 stereotype "<<list<<list>>>>" xyz 555 264 3000 to ref 128002
+  role_a_pos 587 196 3000 no_role_b
+  multiplicity_a_pos 562 196 3000 no_multiplicity_b
+end
+end

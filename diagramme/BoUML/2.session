@@ -1,0 +1,17 @@
+window_sizes 1800 923 450 1344 766 104
+cleanlooks_style
+diagrams
+  active  classdiagram_ref 128002 // puissance4
+    1075 612 100 A4 24 0
+end
+show_stereotypes
+selected attribute_ref 128386 // plateau
+open
+  class_ref 128002 // Case
+  class_ref 128258 // Client
+  class_ref 128386 // Main
+  class_ref 128514 // Plateau
+  class_ref 128642 // Server
+  classview_ref 128130 // unknown
+end
+end

@@ -1,0 +1,35 @@
+class Server
+!!!129794.java!!!	startServer(in port : int) : void
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Serveur lancé sur le port " + port);
+            System.out.println("État initial du plateau :");
+            broadcastPlateau(); // Envoyer l'état initial (facultatif, après la première connexion)
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Nouvelle connexion client : " + clientSocket.getRemoteSocketAddress());
+                // Création du thread client
+                new Thread(new ClientHandler(clientSocket)).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+!!!129922.java!!!	broadcastPlateau() : void
+        lock.lock();
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n----- État du Plateau -----\n");
+            sb.append(plateau.toString()); // Assurez-vous que Plateau.toString() renvoie l'état du plateau
+            sb.append("\n---------------------------\n");
+            for (PrintWriter client : clients) {
+                client.println(sb.toString());
+            }
+        } finally {
+            lock.unlock();
+        }
+!!!130050.java!!!	broadcastMessage(in message : String) : void
+        for (PrintWriter client : clients) {
+            client.println(message);
+        }
+!!!130434.java!!!	main(inout args : String [[]]) : void
+        new Server().startServer(5555);

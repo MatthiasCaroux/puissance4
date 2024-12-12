@@ -1,0 +1,64 @@
+class ClientHandler
+!!!130178.java!!!	ClientHandler(inout clientSocket : Socket)
+            this.clientSocket = clientSocket;
+!!!130306.java!!!	run() : void
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+                writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                clients.add(writer);
+                
+                // Envoyer l'état du plateau à ce nouveau client
+                writer.println("Bienvenue sur le serveur de jeu !");
+                broadcastPlateau();
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.equalsIgnoreCase("QUIT")) {
+                        writer.println("Au revoir !");
+                        break;
+                    }
+
+                    // On s'attend à recevoir un nombre (la colonne)
+                    try {
+                        int colonne = Integer.parseInt(line);
+                        if (colonne < 1 || colonne > 7) {
+                            writer.println("Colonne invalide. Choisissez une colonne entre 1 et 7.");
+                            continue;
+                        }
+
+                        lock.lock();
+                        try {
+                            // Jouer le coup
+                            plateau.jouer(colonne - 1);
+
+                            // Affichage du plateau à tous
+                            broadcastPlateau();
+
+                            // Vérifier si gagné
+                            if (plateau.estGagne()) {
+                                plateau.changerCouleurCourante();
+                                String message = "Le joueur " + plateau.getCouleurCourante() + " a gagné !";
+                                broadcastMessage(message);
+                                // Ici, on pourrait réinitialiser le plateau ou fermer la partie
+                                break;
+                            } else {
+                                // Continuer le jeu
+                            }
+
+                        } finally {
+                            lock.unlock();
+                        }
+                    } catch (NumberFormatException e) {
+                        writer.println("Commande invalide. Entrez un nombre (1-7) ou QUIT.");
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                clients.remove(writer);
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
