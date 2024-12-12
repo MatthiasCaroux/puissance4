@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class Client {
     public static void main(String[] args) {
-        String host = "localhost"; 
+        String host = "192.168.13.60"; 
         int port = 5555;
 
         try (Socket socket = new Socket(host, port);
