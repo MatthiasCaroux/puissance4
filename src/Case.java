@@ -48,4 +48,18 @@ public class Case {
         }
         return 'V';
     }
+
+    @Override
+    public String toString(){
+        switch (etat) {
+            case ROUGE:
+                return "R ";
+            case JAUNE:
+                return "J ";
+            case VIDE:
+                return "[] ";
+        }
+        return "";
+
+    }
 }

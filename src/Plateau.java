@@ -57,19 +57,19 @@ public class Plateau {
             for (int j = 0; j < 7; j++) {
                 char couleur = this.getEtat(i, j);
                 if (couleur != 'V') {
-                    // Vérification horizontale
+                    // VÃ©rification horizontale
                     if (j + 3 < 7 && couleur == this.getEtat(i, j + 1) && couleur == this.getEtat(i, j + 2) && couleur == this.getEtat(i, j + 3)) {
                         return true;
                     }
-                    // Vérification verticale
+                    // VÃ©rification verticale
                     if (i + 3 < 6 && couleur == this.getEtat(i + 1, j) && couleur == this.getEtat(i + 2, j) && couleur == this.getEtat(i + 3, j)) {
                         return true;
                     }
-                    // Vérification diagonale montante
+                    // VÃ©rification diagonale montante
                     if (i + 3 < 6 && j + 3 < 7 && couleur == this.getEtat(i + 1, j + 1) && couleur == this.getEtat(i + 2, j + 2) && couleur == this.getEtat(i + 3, j + 3)) {
                         return true;
                     }
-                    // Vérification diagonale descendante
+                    // VÃ©rification diagonale descendante
                     if (i + 3 < 6 && j - 3 >= 0 && couleur == this.getEtat(i + 1, j - 1) && couleur == this.getEtat(i + 2, j - 2) && couleur == this.getEtat(i + 3, j - 3)) {
                         return true;
                     }
@@ -89,7 +89,7 @@ public class Plateau {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 7; j++) {
-                sb.append(plateau.get(i).get(j).getEtat());
+                sb.append(plateau.get(i).get(j).toString());
             }
             sb.append("\n");
         }
