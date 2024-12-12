@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class Client {
     public static void main(String[] args) {
-        String host = "192.168.13.60"; // l'adresse IP du serveur
+        String host = "localhost"; 
         int port = 5555;
 
         try (Socket socket = new Socket(host, port);
@@ -13,7 +13,6 @@ public class Client {
 
             System.out.println("Connecté au serveur : " + socket.getRemoteSocketAddress());
 
-            // Démarrer un thread pour lire en continu ce que le serveur envoie
             Thread listener = new Thread(() -> {
                 try {
                     String line;
@@ -27,7 +26,6 @@ public class Client {
 
             listener.start();
 
-            // Envoyer des commandes (colonnes ou QUIT)
             Scanner scanner = new Scanner(System.in);
             while (true) {
                 System.out.println("Entrez la colonne (1-7) ou QUIT pour quitter :");
@@ -38,7 +36,7 @@ public class Client {
                 }
             }
 
-            listener.join(); // Attendre la fin du thread de lecture
+            listener.join(); 
         } catch (IOException | InterruptedException e) {
             System.err.println("Erreur de connexion : " + e.getMessage());
         }
