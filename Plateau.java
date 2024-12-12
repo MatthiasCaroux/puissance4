@@ -83,5 +83,17 @@ public class Plateau {
     public char getCouleurCourante() {
         return this.couleurCourante;
     }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 7; j++) {
+                sb.append(plateau.get(i).get(j).getEtat());
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
     
 }
