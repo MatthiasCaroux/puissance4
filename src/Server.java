@@ -70,86 +70,94 @@ public class Server {
                 // Initialisation des flux de communication
                 reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                clients.add(writer);  // Ajout du writer à la liste des clients
     
                 // Afficher les parties en cours et demander au client de choisir ou de créer une nouvelle partie
                 afficherPartiesEnCours(writer);
                 writer.println("Entrez l'ID d'une partie à rejoindre ou 'NOUVELLE' pour créer une nouvelle partie :");
                 String choix = reader.readLine().trim();
     
-                if ("NOUVELLE".equalsIgnoreCase(choix)) {
-                    partie = new Partie(parties.size() + 1);
-                    parties.add(partie);
-                    writer.println("Nouvelle partie créée avec l'ID: " + partie.getId());
-                } else {
-                    try {
-                        int idPartie = Integer.parseInt(choix);
-                        partie = parties.stream().filter(p -> p.getId() == idPartie && !p.estPleine()).findFirst().orElse(null);
+                synchronized(parties) {  // Protection de l'accès à la liste des parties
+                    if ("NOUVELLE".equalsIgnoreCase(choix)) {
+                        partie = new Partie(parties.size() + 1);
+                        parties.add(partie);
+                        writer.println("Nouvelle partie créée avec l'ID: " + partie.getId());
+                    } else {
+                        try {
+                            int idPartie = Integer.parseInt(choix);
+                            partie = parties.stream()
+                                .filter(p -> p.getId() == idPartie && !p.estPleine())
+                                .findFirst()
+                                .orElse(null);
     
-                        if (partie == null) {
-                            writer.println("Cette partie est soit pleine, soit inexistante.");
+                            if (partie == null) {
+                                writer.println("Cette partie est soit pleine, soit inexistante.");
+                                afficherPartiesEnCours(writer);
+                                return;
+                            }
+                        } catch (NumberFormatException e) {
+                            writer.println("ID de partie invalide.");
                             afficherPartiesEnCours(writer);
                             return;
                         }
-                    } catch (NumberFormatException e) {
-                        writer.println("ID de partie invalide.");
-                        afficherPartiesEnCours(writer);
-                        return;
                     }
                 }
     
-                // Ajouter le joueur à la partie et afficher un message
+                // Ajouter le joueur à la partie
                 partie.ajouterJoueur(writer);
-                
-                writer.println("Vous êtes maintenant dans la partie " + partie.getId() + ".");
+                currentPlayerIndex = partie.getJoueurs().size() - 1;  // Index du joueur qui vient d'être ajouté
+                writer.println("Vous êtes le joueur " + (currentPlayerIndex + 1) + " dans la partie " + partie.getId());
     
-                // Lancer la partie, en alternant les tours entre les joueurs
+                // Si la partie est pleine, commencer le jeu
+                if (partie.estPleine()) {
+                    broadcastMessage(partie, "La partie " + partie.getId() + " commence!");
+                    broadcastPlateau(partie);
+                }
+    
+                // Boucle principale du jeu
                 while (true) {
                     // Vérifier si c'est le tour du joueur actuel
                     if (partie.getJoueurs().get(currentPlayerIndex) == writer) {
-                        writer.println("Début de la partie. C'est à vous de jouer.");
-                        broadcastPlateau(partie);
+                        writer.println("C'est à vous de jouer.");
                         writer.println("Entrez la colonne (1-7) ou 'QUIT' pour quitter :");
-                        String choixTour = reader.readLine().trim();
+                        String choixTour = reader.readLine();
     
-                        if ("QUIT".equalsIgnoreCase(choixTour)) {
-                            partie.terminerPartie();
+                        if (choixTour == null || "QUIT".equalsIgnoreCase(choixTour.trim())) {
+                            broadcastMessage(partie, "Le joueur " + (currentPlayerIndex + 1) + " a quitté la partie.");
                             break;
                         }
     
                         try {
-                            int colonne = Integer.parseInt(choixTour);
-                            if (colonne < 1 || colonne > 7) {
-                                writer.println("Colonne invalide.");
-                                continue;
-                            }
+                            synchronized(partie) {  // Protection des opérations sur la partie
+                                int colonne = Integer.parseInt(choixTour.trim());
+                                if (colonne < 1 || colonne > 7) {
+                                    writer.println("Colonne invalide.");
+                                    continue;
+                                }
     
-                            lock.lock();
-                            try {
                                 if (!partie.getPlateau().jouer(colonne - 1)) {
                                     writer.println("Colonne pleine, choisissez une autre colonne.");
                                     continue;
                                 }
     
-                                // Afficher le plateau
                                 broadcastPlateau(partie);
     
                                 if (partie.getPlateau().estGagne()) {
-                                    writer.println("Félicitations! Vous avez gagné.");
+                                    writer.println("Félicitations! Vous avez gagné!");
                                     broadcastMessage(partie, "Le joueur " + (currentPlayerIndex + 1) + " a gagné!");
+                                    partie.terminerPartie();
+                                    break;
+                                } else if (partie.getPlateau().estPlein()) {
+                                    broadcastMessage(partie, "Match nul!");
                                     partie.terminerPartie();
                                     break;
                                 }
     
-                                // Changer de tour
                                 currentPlayerIndex = (currentPlayerIndex + 1) % partie.getJoueurs().size();
                                 broadcastMessage(partie, "C'est au joueur " + (currentPlayerIndex + 1) + " de jouer.");
-    
-                            } finally {
-                                lock.unlock();
                             }
-    
                         } catch (NumberFormatException e) {
-                            writer.println("Commande invalide.");
+                            writer.println("Commande invalide. Entrez un nombre entre 1 et 7.");
                         }
                     }
                 }
@@ -157,6 +165,9 @@ public class Server {
                 e.printStackTrace();
             } finally {
                 clients.remove(writer);
+                if (partie != null) {
+                    partie.getJoueurs().remove(writer);
+                }
                 try {
                     clientSocket.close();
                 } catch (IOException e) {

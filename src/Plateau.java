@@ -105,5 +105,18 @@ public class Plateau {
         }
         return sb.toString();
     }
+
+    public boolean estPlein() {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 7; j++) {
+                if (this.getEtat(i, j) == 'V') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
     
 }
