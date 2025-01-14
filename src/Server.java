@@ -9,6 +9,7 @@ public class Server {
     private final Plateau plateau = new Plateau();
     private final ReentrantLock lock = new ReentrantLock();
     private final List<PrintWriter> clients = new CopyOnWriteArrayList<>();
+    private final Map<Integer, String> playerNames = new HashMap<>();
     private int currentPlayerIndex = 0;
 
     public void startServer(int port) {
@@ -48,10 +49,6 @@ public class Server {
         }
     }
 
-    private void sendToClient(PrintWriter client, String message) {
-        client.println(message);
-    }
-
     private class ClientHandler implements Runnable {
         private final Socket clientSocket;
         private PrintWriter writer;
@@ -66,21 +63,25 @@ public class Server {
                 writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 clients.add(writer);
 
+                writer.println("Entrez votre nom :");
+                String playerName = reader.readLine();
                 int playerIndex = clients.size() - 1;
-                writer.println("Bienvenue sur le serveur de jeu ! Vous êtes le joueur " + (playerIndex + 1));
+                playerNames.put(playerIndex, playerName);
+
+                broadcastMessage(playerName + " a rejoint la partie.");
                 broadcastPlateau();
 
                 String line;
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (line.equalsIgnoreCase("QUIT")) {
-                        writer.println("Au revoir !");
+                        writer.println("Au revoir, " + playerName + "!");
                         break;
                     }
 
                     if (playerIndex != currentPlayerIndex) {
-                        sendToClient(writer, line);
-                        writer.println("Ce n'est pas votre tour. Attendez le joueur " + (currentPlayerIndex + 1) + ".");
+                        writer.println("Ce n'est pas votre tour. Attendez le joueur " +
+                                       playerNames.get(currentPlayerIndex) + ".");
                         continue;
                     }
 
@@ -101,13 +102,13 @@ public class Server {
                             broadcastPlateau();
 
                             if (plateau.estGagne()) {
-                                String message = "Le joueur " + (currentPlayerIndex + 1) + " a gagné !";
+                                String message = playerName + " a gagné !";
                                 broadcastMessage(message);
                                 break;
                             }
 
                             currentPlayerIndex = (currentPlayerIndex + 1) % clients.size();
-                            broadcastMessage("C'est au joueur " + (currentPlayerIndex + 1) + " de jouer.");
+                            broadcastMessage("C'est au joueur " + playerNames.get(currentPlayerIndex) + " de jouer.");
                         } finally {
                             lock.unlock();
                         }
@@ -119,6 +120,7 @@ public class Server {
                 e.printStackTrace();
             } finally {
                 clients.remove(writer);
+                playerNames.remove(currentPlayerIndex);
                 try {
                     clientSocket.close();
                 } catch (IOException e) {
