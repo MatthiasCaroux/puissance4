@@ -99,10 +99,11 @@ public class Server {
     
                 // Ajouter le joueur à la partie et afficher un message
                 partie.ajouterJoueur(writer);
+                
                 writer.println("Vous êtes maintenant dans la partie " + partie.getId() + ".");
     
                 // Lancer la partie, en alternant les tours entre les joueurs
-                while (partie.estEnCours()) {
+                while (true) {
                     // Vérifier si c'est le tour du joueur actuel
                     if (partie.getJoueurs().get(currentPlayerIndex) == writer) {
                         writer.println("Début de la partie. C'est à vous de jouer.");
