@@ -8,14 +8,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server {
     private final Plateau plateau = new Plateau();
     private final ReentrantLock lock = new ReentrantLock();
-
     private final List<PrintWriter> clients = new CopyOnWriteArrayList<>();
+    private int currentPlayerIndex = 0;
 
     public void startServer(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Serveur lancé sur le port " + port);
             System.out.println("État initial du plateau :");
-            broadcastPlateau(); 
+            broadcastPlateau();
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -32,7 +32,7 @@ public class Server {
         try {
             StringBuilder sb = new StringBuilder();
             sb.append("\n----- État du Plateau -----\n");
-            sb.append(plateau.toString()); 
+            sb.append(plateau.toString());
             sb.append("\n---------------------------\n");
             for (PrintWriter client : clients) {
                 client.println(sb.toString());
@@ -48,6 +48,10 @@ public class Server {
         }
     }
 
+    private void sendToClient(PrintWriter client, String message) {
+        client.println(message);
+    }
+
     private class ClientHandler implements Runnable {
         private final Socket clientSocket;
         private PrintWriter writer;
@@ -61,8 +65,9 @@ public class Server {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
                 writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 clients.add(writer);
-                
-                writer.println("Bienvenue sur le serveur de jeu !");
+
+                int playerIndex = clients.size() - 1;
+                writer.println("Bienvenue sur le serveur de jeu ! Vous êtes le joueur " + (playerIndex + 1));
                 broadcastPlateau();
 
                 String line;
@@ -71,6 +76,12 @@ public class Server {
                     if (line.equalsIgnoreCase("QUIT")) {
                         writer.println("Au revoir !");
                         break;
+                    }
+
+                    if (playerIndex != currentPlayerIndex) {
+                        sendToClient(writer, line);
+                        writer.println("Ce n'est pas votre tour. Attendez le joueur " + (currentPlayerIndex + 1) + ".");
+                        continue;
                     }
 
                     try {
@@ -82,18 +93,21 @@ public class Server {
 
                         lock.lock();
                         try {
-                            plateau.jouer(colonne - 1);
+                            if (!plateau.jouer(colonne - 1)) {
+                                writer.println("Cette colonne est pleine. Choisissez une autre colonne.");
+                                continue;
+                            }
 
                             broadcastPlateau();
 
                             if (plateau.estGagne()) {
-                                plateau.changerCouleurCourante();
-                                String message = "Le joueur " + plateau.getCouleurCourante() + " a gagné !";
+                                String message = "Le joueur " + (currentPlayerIndex + 1) + " a gagné !";
                                 broadcastMessage(message);
                                 break;
-                            } else {
                             }
 
+                            currentPlayerIndex = (currentPlayerIndex + 1) % clients.size();
+                            broadcastMessage("C'est au joueur " + (currentPlayerIndex + 1) + " de jouer.");
                         } finally {
                             lock.unlock();
                         }

@@ -31,23 +31,26 @@ public class Plateau {
         return plateau.get(i).get(j).getEtat();
     }
 
-    public void jouer(int colonne) {
+    public boolean jouer(int colonne) {
         for (int i = 5; i >= 0; i--) {
             for (int j = 0; j < 7; j++) {
                 if (j == colonne && this.getEtat(i, j) == 'V') {
                     if (colonne >= 0 && colonne < 7) {
                         plateau.get(i).get(j).jouer(this.couleurCourante);
                         this.changerCouleurCourante();
-                        return;
+                        return true;
                         }
                     else {
+                        
                         System.out.println("Colonne invalide");
+                        return false;
                         
                     }
 
                 }
             }
         }
+        return false;
     }
 
     public void changerCouleurCourante() {
