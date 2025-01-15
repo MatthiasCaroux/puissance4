@@ -33,35 +33,36 @@ public class Partie {
         return this.clients.size() == 2;
     }
 
-    public void handleMove(PrintWriter writer, String input) {
+    public boolean handleMove(PrintWriter writer, String input) {
         lock.lock();
         try {
             int playerIndex = clients.indexOf(writer);
-
+    
             if (playerIndex != currentPlayerIndex) {
                 writer.println("Ce n'est pas votre tour. Attendez votre tour.");
-                return;
+                return false;
             }
-
+    
             try {
                 int colonne = Integer.parseInt(input);
                 if (colonne < 1 || colonne > 7) {
                     writer.println("Colonne invalide. Choisissez une colonne entre 1 et 7.");
-                    return;
+                    return false;
                 }
-
+    
                 if (!plateau.jouer(colonne - 1)) {
                     writer.println("Cette colonne est pleine. Choisissez une autre colonne.");
-                    return;
+                    return false;
                 }
-
+    
                 broadcastPlateau();
-
+    
                 if (plateau.estGagne()) {
                     broadcastMessage("Le joueur " + (currentPlayerIndex + 1) + " a gagné !");
-                    return;
+                    resetPartie(); // Retour au lobby
+                    return true; // Signale la fin de la partie
                 }
-
+    
                 currentPlayerIndex = (currentPlayerIndex + 1) % clients.size();
                 broadcastMessage("C'est au joueur " + (currentPlayerIndex + 1) + " de jouer.");
             } catch (NumberFormatException e) {
@@ -70,7 +71,16 @@ public class Partie {
         } finally {
             lock.unlock();
         }
+        return false; // La partie continue
     }
+    
+    private void resetPartie() {
+        broadcastMessage("La partie est terminée. Vous êtes maintenant de retour au lobby.");
+        for (PrintWriter client : clients) {
+            client.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
+        }
+    }
+    
 
     private void broadcastMessage(String message) {
         for (PrintWriter client : clients) {

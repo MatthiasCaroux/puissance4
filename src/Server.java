@@ -26,61 +26,67 @@ public class Server {
         private final Socket clientSocket;
         private PrintWriter writer;
         private Partie currentPartie;
-
+    
         public ClientHandler(Socket clientSocket) {
             this.clientSocket = clientSocket;
         }
-
+    
         @Override
         public void run() {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
                 writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 clients.add(writer);
-
-                writer.println("Bienvenue sur le serveur de jeu !");
-                writer.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-
-                    if (line.equalsIgnoreCase("QUIT")) {
-                        writer.println("Au revoir !");
-                        break;
-                    }
-
-                    if (line.equalsIgnoreCase("nouvelle")) {
-                        currentPartie = new Partie(writer, parties.size());
-                        parties.add(currentPartie);
-                        writer.println("Nouvelle partie créée avec l'ID " + (parties.size() - 1));
-                        break;
-                    } else if (line.matches("[0-9]+")) {
-                        int partieId = Integer.parseInt(line);
-                        if (partieId >= 0 && partieId < parties.size()) {
-                            currentPartie = parties.get(partieId);
-                            currentPartie.addJoueur(writer);
-                            if (currentPartie.isFull()) {
-                                writer.println("Vous avez rejoint la partie " + partieId + ".");
-                            }
-                            break;
-                        } else {
-                            writer.println("ID de partie invalide.");
+    
+                while (true) { // Boucle infinie pour toujours revenir au lobby
+                    showLobbyMenu();
+    
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+    
+                        if (line.equalsIgnoreCase("QUIT")) {
+                            writer.println("Au revoir !");
+                            clients.remove(writer);
+                            clientSocket.close();
+                            return; // Quitte complètement le handler
                         }
-                    } else {
-                        writer.println("Commande invalide. Entrez 'nouvelle' ou un ID pour rejoindre une partie.");
+    
+                        if (line.equalsIgnoreCase("nouvelle")) {
+                            currentPartie = new Partie(writer, parties.size());
+                            parties.add(currentPartie);
+                            writer.println("Nouvelle partie créée avec l'ID " + (parties.size() - 1));
+                            break; // Sort du menu pour démarrer une partie
+                        } else if (line.matches("[0-9]+")) {
+                            int partieId = Integer.parseInt(line);
+                            if (partieId >= 0 && partieId < parties.size()) {
+                                currentPartie = parties.get(partieId);
+                                currentPartie.addJoueur(writer);
+                                if (currentPartie.isFull()) {
+                                    writer.println("Vous avez rejoint la partie " + partieId + ".");
+                                }
+                                break; // Sort du menu pour rejoindre une partie
+                            } else {
+                                writer.println("ID de partie invalide.");
+                            }
+                        } else {
+                            writer.println("Commande invalide. Entrez 'nouvelle' ou un ID pour rejoindre une partie.");
+                        }
                     }
-                }
-
-                while ((line = reader.readLine()) != null) {
-                    if (line.equalsIgnoreCase("QUIT")) {
-                        writer.println("Au revoir !");
-                        break;
-                    }
-
-                    if (currentPartie != null) {
-                        currentPartie.handleMove(writer, line);
-                    } else {
-                        writer.println("Vous devez rejoindre ou créer une partie d'abord.");
+    
+                    // Boucle de la partie (continue tant que la partie est active)
+                    while (currentPartie != null && (line = reader.readLine()) != null) {
+                        if (line.equalsIgnoreCase("QUIT")) {
+                            writer.println("Au revoir !");
+                            clients.remove(writer);
+                            clientSocket.close();
+                            return; // Quitte complètement le handler
+                        }
+    
+                        boolean partieTerminee = currentPartie.handleMove(writer, line);
+                        if (partieTerminee) {
+                            currentPartie = null; 
+                            break; // Retourne au menu du lobby
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -94,7 +100,13 @@ public class Server {
                 }
             }
         }
+    
+        private void showLobbyMenu() {
+            writer.println("\n--- Menu Principal ---");
+            writer.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
+        }
     }
+    
 
     public static void main(String[] args) {
         new Server().startServer(5555);
