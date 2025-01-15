@@ -13,7 +13,11 @@ public class Client {
 
             System.out.println("Connecté au serveur : " + socket.getRemoteSocketAddress());
 
-            
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Entrez votre nom :");
+            String playerName = scanner.nextLine();
+            writer.println(playerName);
+
 
             Thread listener = new Thread(() -> {
                 try {
@@ -28,18 +32,22 @@ public class Client {
 
             listener.start();
 
-            Scanner scanner = new Scanner(System.in);
             while (true) {
-                System.out.println("Entrez la colonne (1-7) ou QUIT pour quitter :");
+                System.out.println("Entrez la colonne (1-7) ou QUIT pour quitter :"); // à enlever peut-être
                 String command = scanner.nextLine().trim();
                 writer.println(command);
+
                 if ("QUIT".equalsIgnoreCase(command)) {
-                    break;
+                    break; // Quitte si la commande est "QUIT"
                 }
             }
+
+
+            // Ferme le scanner et attend que le thread d'écouteur termine
             scanner.close();
 
-            listener.join(); 
+
+            listener.join();
         } catch (IOException | InterruptedException e) {
             System.err.println("Erreur de connexion : " + e.getMessage());
         }
