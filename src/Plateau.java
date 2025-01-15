@@ -14,7 +14,7 @@ public class Plateau {
             }
             plateau.add(ligne);
         }
-        this.couleurCourante = 'R';
+        this.couleurCourante = 'R'; // on commence par Rouge
     }
 
     public void afficher() {
@@ -32,63 +32,52 @@ public class Plateau {
     }
 
     public boolean jouer(int colonne) {
+        // On insère dans la case vide la plus basse
         for (int i = 5; i >= 0; i--) {
-            for (int j = 0; j < 7; j++) {
-                if (j == colonne && this.getEtat(i, j) == 'V') {
-                    if (colonne >= 0 && colonne < 7) {
-                        plateau.get(i).get(j).jouer(this.couleurCourante);
-                        this.changerCouleurCourante();
-                        return true;
-                        }
-                    else {
-                        
-                        System.out.println("Colonne invalide");
-                        return false;
-                        
-                    }
-
-                }
+            if (this.getEtat(i, colonne) == 'V') {
+                plateau.get(i).get(colonne).jouer(this.couleurCourante);
+                this.changerCouleurCourante();
+                return true;
             }
         }
         return false;
     }
 
     public void changerCouleurCourante() {
-        if (this.couleurCourante == 'R') {
-            this.couleurCourante = 'J';
-        } else {
-            this.couleurCourante = 'R';
-        }
+        this.couleurCourante = (this.couleurCourante == 'R') ? 'J' : 'R';
     }
 
-
     public boolean estGagne() {
+        // Vérification horizontale, verticale, diagonales...
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 7; j++) {
                 char couleur = this.getEtat(i, j);
                 if (couleur != 'V') {
-                    // VÃ©rification horizontale
-                    if (j + 3 < 7 && couleur == this.getEtat(i, j + 1) && couleur == this.getEtat(i, j + 2) && couleur == this.getEtat(i, j + 3)) {
+                    // Horizontale
+                    if (j + 3 < 7 && couleur == this.getEtat(i, j + 1)
+                                  && couleur == this.getEtat(i, j + 2)
+                                  && couleur == this.getEtat(i, j + 3))
                         return true;
-                    }
-                    // VÃ©rification verticale
-                    if (i + 3 < 6 && couleur == this.getEtat(i + 1, j) && couleur == this.getEtat(i + 2, j) && couleur == this.getEtat(i + 3, j)) {
+                    // Verticale
+                    if (i + 3 < 6 && couleur == this.getEtat(i + 1, j)
+                                  && couleur == this.getEtat(i + 2, j)
+                                  && couleur == this.getEtat(i + 3, j))
                         return true;
-                    }
-                    // VÃ©rification diagonale montante
-                    if (i + 3 < 6 && j + 3 < 7 && couleur == this.getEtat(i + 1, j + 1) && couleur == this.getEtat(i + 2, j + 2) && couleur == this.getEtat(i + 3, j + 3)) {
+                    // Diagonale montante
+                    if (i + 3 < 6 && j + 3 < 7 && couleur == this.getEtat(i + 1, j + 1)
+                                             && couleur == this.getEtat(i + 2, j + 2)
+                                             && couleur == this.getEtat(i + 3, j + 3))
                         return true;
-                    }
-                    // VÃ©rification diagonale descendante
-                    if (i + 3 < 6 && j - 3 >= 0 && couleur == this.getEtat(i + 1, j - 1) && couleur == this.getEtat(i + 2, j - 2) && couleur == this.getEtat(i + 3, j - 3)) {
+                    // Diagonale descendante
+                    if (i + 3 < 6 && j - 3 >= 0 && couleur == this.getEtat(i + 1, j - 1)
+                                              && couleur == this.getEtat(i + 2, j - 2)
+                                              && couleur == this.getEtat(i + 3, j - 3))
                         return true;
-                    }
                 }
             }
         }
         return false;
     }
-
 
     public char getCouleurCourante() {
         return this.couleurCourante;
@@ -105,5 +94,4 @@ public class Plateau {
         }
         return sb.toString();
     }
-    
 }

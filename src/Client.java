@@ -13,11 +13,7 @@ public class Client {
 
             System.out.println("Connecté au serveur : " + socket.getRemoteSocketAddress());
 
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Entrez votre nom :");
-            String playerName = scanner.nextLine();
-            writer.println(playerName);
-
+            // On crée un thread qui écoute tout ce qui vient du serveur
             Thread listener = new Thread(() -> {
                 try {
                     String line;
@@ -28,20 +24,24 @@ public class Client {
                     System.err.println("Erreur de lecture du serveur : " + e.getMessage());
                 }
             });
-
             listener.start();
 
+            // On lit la console locale pour envoyer les commandes (le nom et/ou les coups)
+            Scanner scanner = new Scanner(System.in);
             while (true) {
-                System.out.println("Entrez la colonne (1-7) ou QUIT pour quitter :");
+                // Tapez votre nom (le serveur aura envoyé "Entrez votre nom :"),
+                // puis tapez un chiffre (1-7) pour la colonne ou "QUIT"
                 String command = scanner.nextLine().trim();
                 writer.println(command);
                 if ("QUIT".equalsIgnoreCase(command)) {
                     break;
                 }
             }
-            scanner.close();
 
+            // On ferme le scanner local et on attend que le thread listener finisse
+            scanner.close();
             listener.join();
+
         } catch (IOException | InterruptedException e) {
             System.err.println("Erreur de connexion : " + e.getMessage());
         }
