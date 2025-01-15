@@ -9,6 +9,7 @@ public class Server {
     private Plateau plateau;
     private final ReentrantLock lock = new ReentrantLock();
     private final List<PrintWriter> clients = new CopyOnWriteArrayList<>();
+    private final Map<Integer, String> playerNames = new HashMap<>();
     private int currentPlayerIndex = 0;
     private boolean gameStarted = false;
 
@@ -52,6 +53,7 @@ public class Server {
             client.println(message);
         }
     }
+
 
     private void sendToClient(PrintWriter client, String message) {
         client.println(message);
@@ -112,7 +114,10 @@ public class Server {
                 writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 clients.add(writer);
 
+                writer.println("Entrez votre nom :");
+                String playerName = reader.readLine();
                 int playerIndex = clients.size() - 1;
+
                 writer.println("Bienvenue sur le serveur de jeu ! Vous êtes le joueur " + (playerIndex + 1));
 
                 // Si deux joueurs sont connectés, démarrer la partie
@@ -125,13 +130,23 @@ public class Server {
                     writer.println("En attente d'un autre joueur...");
                 }
 
+                playerNames.put(playerIndex, playerName);
+
+                broadcastMessage(playerName + " a rejoint la partie.");
+                broadcastPlateau();
+
+
                 String line;
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
 
                     // Case for QUIT command
                     if (line.equalsIgnoreCase("QUIT")) {
+
                         handlePlayerQuit(playerIndex);
+
+                        writer.println("Au revoir, " + playerName + "!");
+
                         break;
                     }
 
@@ -141,7 +156,12 @@ public class Server {
                     }
 
                     if (playerIndex != currentPlayerIndex) {
+
                         writer.println("Ce n'est pas votre tour. Attendez le joueur " + (currentPlayerIndex + 1) + ".");
+
+                        writer.println("Ce n'est pas votre tour. Attendez le joueur " +
+                                       playerNames.get(currentPlayerIndex) + ".");
+
                         continue;
                     }
 
@@ -162,6 +182,7 @@ public class Server {
                             broadcastPlateau();
 
                             if (plateau.estGagne()) {
+
                                 for (int i = 0; i < clients.size(); i++) {
                                     if (i == currentPlayerIndex) {
                                         sendToClient(clients.get(i), "Félicitations ! Vous avez gagné !");
@@ -172,12 +193,19 @@ public class Server {
 
                                 disconnectAllClients("Partie terminée. Merci d'avoir joué !");
                                 resetGame();
+
+                                String message = playerName + " a gagné !";
+                                broadcastMessage(message);
+
                                 break;
                             }
 
                             currentPlayerIndex = (currentPlayerIndex + 1) % clients.size();
+
                             broadcastMessage("C'est au joueur " + (currentPlayerIndex + 1) + " de jouer.");
                             sendToClient(clients.get(currentPlayerIndex), "C'est à vous de jouer. Entrez la colonne (1-7) ou QUIT pour quitter :");
+
+                            broadcastMessage("C'est au joueur " + playerNames.get(currentPlayerIndex) + " de jouer.");
 
                         } finally {
                             lock.unlock();
@@ -189,10 +217,15 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+
                 // In case of sudden disconnect (Ctrl+C)
                 if (!clientSocket.isClosed()) {
                     clients.remove(writer);
                 }
+
+
+                clients.remove(writer);
+                playerNames.remove(currentPlayerIndex);
 
                 try {
                     clientSocket.close();
