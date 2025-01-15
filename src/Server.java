@@ -121,6 +121,16 @@ public class Server {
                         writer.println("C'est à vous de jouer.");
                         writer.println("Entrez la colonne (1-7) ou 'QUIT' pour quitter :");
                         String choixTour = reader.readLine();
+                        try {
+                            int colonne = Integer.parseInt(choixTour.trim());
+                            if (colonne < 1 || colonne > 7) {
+                                writer.println("Colonne invalide. Entrez un nombre entre 1 et 7.");
+                                continue;
+                            }
+                        } catch (NumberFormatException e) {
+                            writer.println("Commande invalide. Entrez un nombre entre 1 et 7.");
+                            continue;
+                        }
     
                         if (choixTour == null || "QUIT".equalsIgnoreCase(choixTour.trim())) {
                             broadcastMessage(partie, "Le joueur " + (currentPlayerIndex + 1) + " a quitté la partie.");
