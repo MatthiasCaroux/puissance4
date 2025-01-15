@@ -60,7 +60,14 @@ public class Plateau {
             this.couleurCourante = 'R';
         }
     }
-
+    public boolean estPlein() {
+        for (int j = 0; j < 7; j++) {
+            if (this.getEtat(0, j) == 'V') { // Si la première ligne contient encore une case vide
+                return false;
+            }
+        }
+        return true;
+    }
 
     public boolean estGagne() {
         for (int i = 0; i < 6; i++) {
