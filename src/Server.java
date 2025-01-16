@@ -105,6 +105,8 @@ public class Server {
                             // Si handleMove() renvoie true, c'est que la partie est finie :
                             // on remet la variable currentPartie à null => retour au lobby
                             currentPartie = null;
+                            // Supprimer les parties terminées
+                            supprimerPartieTerminee();
                             break; // On retourne au while (true) pour re-proposer le lobby
                         }
                     }
@@ -128,6 +130,20 @@ public class Server {
         private void showLobbyMenu() {
             writer.println("\n--- Menu Principal ---");
             writer.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
+        }
+    }
+
+    /**
+     * Méthode pour supprimer les parties terminées de la liste
+     */
+    private void supprimerPartieTerminee() {
+        Iterator<Partie> iterator = parties.iterator();
+        while (iterator.hasNext()) {
+            Partie partie = iterator.next();
+            if (partie.getFini()) { // Vérifie si la partie est terminée
+                iterator.remove(); // Supprime la partie de la liste
+                System.out.println("La partie a été supprimée.");
+            }
         }
     }
 
