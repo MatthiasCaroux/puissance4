@@ -5,7 +5,9 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Server {
+    // Liste de toutes les parties existantes
     private final List<Partie> parties = new ArrayList<>();
+    // Liste globale des flux de tous les clients connectés
     private final List<PrintWriter> clients = new CopyOnWriteArrayList<>();
 
     public void startServer(int port) {
@@ -15,6 +17,7 @@ public class Server {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Nouvelle connexion client : " + clientSocket.getRemoteSocketAddress());
+                // Un nouveau thread par client
                 new Thread(new ClientHandler(clientSocket)).start();
             }
         } catch (IOException e) {
@@ -22,41 +25,51 @@ public class Server {
         }
     }
 
+    /**
+     * Thread gérant la conversation avec UN client précis.
+     */
     private class ClientHandler implements Runnable {
         private final Socket clientSocket;
         private PrintWriter writer;
         private Partie currentPartie;
-    
+
         public ClientHandler(Socket clientSocket) {
             this.clientSocket = clientSocket;
         }
-    
+
         @Override
         public void run() {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+                // Flux pour écrire vers le client
                 writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                // Ajoute le flux à la liste globale
                 clients.add(writer);
-    
-                while (true) { // Boucle infinie pour toujours revenir au lobby
+
+                // Boucle "infinie" du lobby : tant que le client n'a pas
+                // rejoint une partie en cours ou n'a pas créé de partie
+                while (true) {
                     showLobbyMenu();
-    
+
                     String line;
+                    // On lit ce que le client envoie
                     while ((line = reader.readLine()) != null) {
                         line = line.trim();
-    
+
                         if (line.equalsIgnoreCase("QUIT")) {
                             writer.println("Au revoir !");
                             clients.remove(writer);
                             clientSocket.close();
                             return; // Quitte complètement le handler
                         }
-    
+
                         if (line.equalsIgnoreCase("nouvelle")) {
+                            // Le client crée une nouvelle partie
                             currentPartie = new Partie(writer, parties.size());
                             parties.add(currentPartie);
                             writer.println("Nouvelle partie créée avec l'ID " + (parties.size() - 1));
-                            break; // Sort du menu pour démarrer une partie
+                            break; // Sort du menu du lobby pour passer à la boucle de la partie
                         } else if (line.matches("[0-9]+")) {
+                            // Le client saisit un ID de partie
                             int partieId = Integer.parseInt(line);
                             if (partieId >= 0 && partieId < parties.size()) {
                                 currentPartie = parties.get(partieId);
@@ -64,7 +77,7 @@ public class Server {
                                 if (currentPartie.isFull()) {
                                     writer.println("Vous avez rejoint la partie " + partieId + ".");
                                 }
-                                break; // Sort du menu pour rejoindre une partie
+                                break; // Sort du menu pour aller à la boucle de partie
                             } else {
                                 writer.println("ID de partie invalide.");
                             }
@@ -72,26 +85,34 @@ public class Server {
                             writer.println("Commande invalide. Entrez 'nouvelle' ou un ID pour rejoindre une partie.");
                         }
                     }
-    
-                    // Boucle de la partie (continue tant que la partie est active)
-                    while (currentPartie != null && (line = reader.readLine()) != null) {
+
+                    // Ici, on sort de la boucle du lobby parce qu'on a créé/rejoint une partie
+                    // => on gère maintenant la boucle "de partie"
+                    while (!currentPartie.getFini() && (line = reader.readLine()) != null) {
+                        line = line.trim();
+
+                        // Si le joueur tape QUIT en pleine partie
                         if (line.equalsIgnoreCase("QUIT")) {
                             writer.println("Au revoir !");
                             clients.remove(writer);
                             clientSocket.close();
-                            return; // Quitte complètement le handler
+                            return; // On arrête complètement ce client
                         }
-    
+
+                        // Tenter de jouer un coup
                         boolean partieTerminee = currentPartie.handleMove(writer, line);
                         if (partieTerminee) {
-                            currentPartie = null; 
-                            break; // Retourne au menu du lobby
+                            // Si handleMove() renvoie true, c'est que la partie est finie :
+                            // on remet la variable currentPartie à null => retour au lobby
+                            currentPartie = null;
+                            break; // On retourne au while (true) pour re-proposer le lobby
                         }
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+                // Nettoyage
                 clients.remove(writer);
                 try {
                     clientSocket.close();
@@ -100,13 +121,15 @@ public class Server {
                 }
             }
         }
-    
+
+        /**
+         * Affiche le menu de lobby à un client.
+         */
         private void showLobbyMenu() {
             writer.println("\n--- Menu Principal ---");
             writer.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
         }
     }
-    
 
     public static void main(String[] args) {
         new Server().startServer(5555);
