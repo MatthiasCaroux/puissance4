@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Server {
     // Liste de toutes les parties existantes
     private final List<Partie> parties = new ArrayList<>();
-    // Liste globale des flux de tous les clients connectés 
+    // Liste globale des flux de tous les clients connectés
     private final List<PrintWriter> clients = new CopyOnWriteArrayList<>();
 
     public void startServer(int port) {
@@ -110,6 +110,7 @@ public class Server {
                     }
 
                     // Ici, on sort de la boucle du lobby parce qu'on a créé/rejoint une partie
+
                     
                     while (currentPartie != null && !currentPartie.getFini() && (line = reader.readLine()) != null) {
                         line = line.trim();
@@ -129,6 +130,8 @@ public class Server {
                             currentPartie = null;
                             break; // On quitte la boucle de partie => on revient au while(true) du lobby
                         }
+
+
                     }
                 }
             }
@@ -150,6 +153,7 @@ public class Server {
         private void showLobbyMenu() {
             writer.println("\n--- Menu du Lobby ---");
             writer.println("Tapez 'nouvelle' pour créer une partie, 'LISTE' pour voir les parties, un ID pour rejoindre, ou 'QUIT' pour quitter.");
+            writer.println("-----------------------");
         }
 
 
@@ -164,6 +168,8 @@ public class Server {
                 String etat = p.getFini() ? "terminée" : (p.isFull() ? "complète" : "en attente");
                 writer.println("  -> Partie #" + i + " : " + etat);
             }
+
+            writer.println("-------------------------");
         }
     }
 

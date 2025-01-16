@@ -35,6 +35,7 @@ public class Partie {
                 broadcastMessage("Les deux joueurs (" + playerNames.get(0) + " et " + playerNames.get(1) + ") sont prêts !");
                 broadcastPlateau();
                 broadcastMessage("C'est au tour de " + playerNames.get(currentPlayerIndex) + " de commencer.");
+
             }
         } else {
             writer.println("La partie #" + idPartie + " est déjà pleine.");

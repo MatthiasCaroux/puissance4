@@ -33,7 +33,6 @@ public class Client {
             listener.start();
 
             while (true) {
-                System.out.println("Entrez la colonne (1-7) ou QUIT pour quitter :"); // à enlever peut-être
                 String command = scanner.nextLine().trim();
                 writer.println(command);
 

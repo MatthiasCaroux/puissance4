@@ -7,7 +7,6 @@ public class Main {
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (scanner.hasNext()) {
-                System.out.println("Entrez la colonne où vous voulez jouer (1-7)");
                 int colonne = scanner.nextInt();
                 plateau.jouer(colonne-1);
                 plateau.afficher();
