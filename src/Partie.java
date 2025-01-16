@@ -5,48 +5,82 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Partie {
     private final List<PrintWriter> clients = new ArrayList<>();
+    private final List<String> playerNames = new ArrayList<>();  // <-- stocke les noms
     private final Plateau plateau = new Plateau();
     private final ReentrantLock lock = new ReentrantLock();
-    private int currentPlayerIndex = 0;
+    
     private final int idPartie;
-    private boolean fini;
+    private int currentPlayerIndex = 0;
+    private boolean fini;  // indique si la partie est terminée
 
-    public Partie(PrintWriter creator, int idPartie) {
-        this.clients.add(creator);
+    /**
+     * Constructeur pour la création d'une partie.
+     */
+    public Partie(PrintWriter creatorWriter, int idPartie, String creatorName) {
         this.idPartie = idPartie;
         this.fini = false;
+
+        // Ajout du premier joueur
+        this.clients.add(creatorWriter);
+        this.playerNames.add(creatorName);
+
+        broadcastMessage("Partie #" + idPartie + " créée par " + creatorName + ". En attente d'un autre joueur...");
     }
 
-    public void addJoueur(PrintWriter writer) {
+    /**
+     * Ajoute un deuxième joueur (s'il y a de la place).
+     */
+    public void addJoueur(PrintWriter writer, String playerName) {
         if (clients.size() < 2) {
             this.clients.add(writer);
-            broadcastMessage("Un joueur a rejoint la partie " + idPartie + ".");
+            this.playerNames.add(playerName);
+            broadcastMessage(playerName + " a rejoint la partie #" + idPartie + " !");
+
             if (clients.size() == 2) {
-                broadcastMessage("Les deux joueurs sont prêts. La partie commence !");
-                broadcastPlateau(); // Affiche le plateau initial pour les deux joueurs.
-                broadcastMessage("C'est au joueur 1 de commencer.");
+                broadcastMessage("Les deux joueurs (" + playerNames.get(0) + " et " + playerNames.get(1) + ") sont prêts !");
+                broadcastPlateau();
+                broadcastMessage("C'est au tour de " + playerNames.get(currentPlayerIndex) + " de commencer.");
             }
         } else {
-            writer.println("La partie " + idPartie + " est déjà pleine.");
+            writer.println("La partie #" + idPartie + " est déjà pleine.");
         }
     }
 
+    /**
+     * Indique si la partie a déjà 2 joueurs.
+     */
     public boolean isFull() {
         return this.clients.size() == 2;
     }
 
     /**
-     * Gère un coup du joueur (un nombre de colonne). Retourne true si la partie est terminée
-     * (quelqu'un a gagné ou la partie doit être coupée), sinon false si on continue.
+     * Indique si la partie est terminée.
      */
-    public boolean handleMove(PrintWriter writer, String input) {
+    public boolean getFini() {
+        return this.fini;
+    }
+
+    /**
+     * Fonction pour forcer la partie comme terminée.
+     */
+    public void terminerPartie() {
+        this.fini = true;
+    }
+
+    /**
+     * Gère un coup du joueur (un nombre de colonne). 
+     * @param writer       Le PrintWriter du joueur qui joue
+     * @param playerName   Le nom du joueur qui joue
+     * @param input        La commande saisie (ex: la colonne)
+     * @return true si la partie se termine (victoire ou autre), false sinon
+     */
+    public boolean handleMove(PrintWriter writer, String playerName, String input) {
         lock.lock();
         try {
+            // On retrouve l'index du joueur qui joue
             int playerIndex = clients.indexOf(writer);
-
-            // Vérifie si c'est bien le tour du joueur
             if (playerIndex != currentPlayerIndex) {
-                writer.println("Ce n'est pas votre tour. Attendez votre tour.");
+                writer.println("Ce n'est pas votre tour, " + playerName + ". Patientez !");
                 return false;  // On ne sort pas de la partie
             }
 
@@ -67,24 +101,32 @@ public class Partie {
 
                 // Vérifie s’il y a un gagnant
                 if (plateau.estGagne()) {
-                    // Gagnant
-                    broadcastMessage("Le joueur " + (currentPlayerIndex + 1) + " a gagné la partie !");
-                    // Perdant
-                    int losingPlayerIndex = (currentPlayerIndex + 1) % clients.size();
-                    broadcastMessage("Le joueur " + (losingPlayerIndex + 1) + " a malheureusement perdu...");
+                    String winnerName = playerNames.get(currentPlayerIndex);
+                    broadcastMessage("Bravo, " + winnerName + " a réussi un Puissance 4 !");
+                    
+                    // Trouve le perdant (s'il y a deux joueurs)
+                    if (playerNames.size() == 2) {
+                        int losingPlayerIndex = (currentPlayerIndex + 1) % 2;
+                        String loserName = playerNames.get(losingPlayerIndex);
+                        broadcastMessage("Dommage pour " + loserName + " ...");
+                        
+                        // On peut aussi envoyer un message direct au perdant
+                        clients.get(losingPlayerIndex)
+                               .println("Vous avez perdu la partie. Vous êtes renvoyé au lobby !");
+                    }
 
-                    // Retour au lobby pour tout le monde
-                    resetPartie();
-                    this.terminerPartie();
-                    return true;  // Important : signaler la fin de la partie
+                    // On marque la partie terminée
+                    terminerPartie();
+                    broadcastMessage("La partie #" + idPartie + " est terminée. Vous revenez tous au lobby...");
+                    return true; // on signale la fin de la partie
                 }
 
                 // Sinon, on continue : on passe au joueur suivant
                 currentPlayerIndex = (currentPlayerIndex + 1) % clients.size();
-                broadcastMessage("C'est au joueur " + (currentPlayerIndex + 1) + " de jouer.");
+                broadcastMessage("C'est maintenant à " + playerNames.get(currentPlayerIndex) + " de jouer.");
 
             } catch (NumberFormatException e) {
-                writer.println("Commande invalide. Entrez un nombre (1-7).");
+                writer.println("Commande invalide, " + playerName + ". Entrez un nombre (1-7).");
             }
         } finally {
             lock.unlock();
@@ -93,18 +135,7 @@ public class Partie {
     }
 
     /**
-     * Remet tous les joueurs au lobby en leur demandant de choisir
-     * soit 'nouvelle' soit un ID de partie ou 'QUIT'.
-     */
-    private void resetPartie() {
-        broadcastMessage("La partie est terminée. Vous êtes maintenant de retour au lobby.");
-        for (PrintWriter client : clients) {
-            client.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
-        }
-    }
-
-    /**
-     * Envoie un message à tous les joueurs de cette partie.
+     * Envoie un message texte à tous les joueurs de cette partie.
      */
     private void broadcastMessage(String message) {
         for (PrintWriter client : clients) {
@@ -119,14 +150,7 @@ public class Partie {
         StringBuilder sb = new StringBuilder();
         sb.append("\n----- État du Plateau -----\n");
         sb.append(plateau.toString());
-        sb.append("\n---------------------------\n");
+        sb.append("---------------------------\n");
         broadcastMessage(sb.toString());
-    }
-    
-    public boolean getFini(){
-        return this.fini;
-    }
-    public void terminerPartie(){
-        this.fini = true;
     }
 }
