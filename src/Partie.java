@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Partie {
     private final List<PrintWriter> clients = new ArrayList<>();
-    private final List<String> playerNames = new ArrayList<>();  // <-- stocke les noms
+    private final List<String> playerNames = new ArrayList<>();  //  stocke les noms
     private final Plateau plateau = new Plateau();
     private final ReentrantLock lock = new ReentrantLock();
     
@@ -13,9 +13,7 @@ public class Partie {
     private int currentPlayerIndex = 0;
     private boolean fini;  // indique si la partie est terminée
 
-    /**
-     * Constructeur pour la création d'une partie.
-     */
+
     public Partie(PrintWriter creatorWriter, int idPartie, String creatorName) {
         this.idPartie = idPartie;
         this.fini = false;
@@ -27,9 +25,6 @@ public class Partie {
         broadcastMessage("Partie #" + idPartie + " créée par " + creatorName + ". En attente d'un autre joueur...");
     }
 
-    /**
-     * Ajoute un deuxième joueur (s'il y a de la place).
-     */
     public void addJoueur(PrintWriter writer, String playerName) {
         if (clients.size() < 2) {
             this.clients.add(writer);
@@ -46,34 +41,22 @@ public class Partie {
         }
     }
 
-    /**
-     * Indique si la partie a déjà 2 joueurs.
-     */
+  
     public boolean isFull() {
         return this.clients.size() == 2;
     }
 
-    /**
-     * Indique si la partie est terminée.
-     */
+
     public boolean getFini() {
         return this.fini;
     }
 
-    /**
-     * Fonction pour forcer la partie comme terminée.
-     */
+
     public void terminerPartie() {
         this.fini = true;
     }
 
-    /**
-     * Gère un coup du joueur (un nombre de colonne). 
-     * @param writer       Le PrintWriter du joueur qui joue
-     * @param playerName   Le nom du joueur qui joue
-     * @param input        La commande saisie (ex: la colonne)
-     * @return true si la partie se termine (victoire ou autre), false sinon
-     */
+    
     public boolean handleMove(PrintWriter writer, String playerName, String input) {
         lock.lock();
         try {
@@ -104,7 +87,7 @@ public class Partie {
                     String winnerName = playerNames.get(currentPlayerIndex);
                     broadcastMessage("Bravo, " + winnerName + " a réussi un Puissance 4 !");
                     
-                    // Trouve le perdant (s'il y a deux joueurs)
+                    // Trouve le perdant
                     if (playerNames.size() == 2) {
                         int losingPlayerIndex = (currentPlayerIndex + 1) % 2;
                         String loserName = playerNames.get(losingPlayerIndex);
@@ -121,7 +104,7 @@ public class Partie {
                     return true; // on signale la fin de la partie
                 }
 
-                // Sinon, on continue : on passe au joueur suivant
+                
                 currentPlayerIndex = (currentPlayerIndex + 1) % clients.size();
                 broadcastMessage("C'est maintenant à " + playerNames.get(currentPlayerIndex) + " de jouer.");
 
@@ -131,21 +114,17 @@ public class Partie {
         } finally {
             lock.unlock();
         }
-        return false;  // La partie continue
+        return false;  
     }
 
-    /**
-     * Envoie un message texte à tous les joueurs de cette partie.
-     */
+
     private void broadcastMessage(String message) {
         for (PrintWriter client : clients) {
             client.println(message);
         }
     }
 
-    /**
-     * Envoie l'état actuel du plateau à tous les joueurs.
-     */
+
     private void broadcastPlateau() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n----- État du Plateau -----\n");
@@ -154,12 +133,6 @@ public class Partie {
         broadcastMessage(sb.toString());
     }
     
-    public boolean getFini(){
-        return this.fini;
-    }
-    public void terminerPartie(){
-        this.fini = true;
-    }
 
     public String getJoueurs() {
         for (PrintWriter client : clients) {
@@ -167,3 +140,4 @@ public class Partie {
         }
         return "";
     }
+}
