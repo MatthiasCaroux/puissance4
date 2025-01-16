@@ -127,6 +127,15 @@ public class Server {
          */
         private void showLobbyMenu() {
             writer.println("\n--- Menu Principal ---");
+            writer.println("Parties en cours :");
+            if (parties.isEmpty()) {
+                writer.println("  Aucune partie en cours.");
+            }
+            for (int i = 0; i < parties.size(); i++) {
+                Partie partie = parties.get(i);
+                writer.println("  Partie " + i + " : " + partie.getJoueurs() + " joueur(s)");
+            }
+            writer.println("-----------------------");
             writer.println("Entrez 'nouvelle' pour créer une partie, un ID pour rejoindre une partie, ou 'QUIT' pour quitter.");
         }
     }

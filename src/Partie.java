@@ -129,4 +129,11 @@ public class Partie {
     public void terminerPartie(){
         this.fini = true;
     }
+
+    public String getJoueurs() {
+        for (PrintWriter client : clients) {
+            return client.toString();
+        }
+        return "";
+    }
 }
