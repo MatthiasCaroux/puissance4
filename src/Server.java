@@ -90,7 +90,7 @@ public class Server {
                     // => on gère maintenant la boucle "de partie"
                     while (!currentPartie.getFini() && (line = reader.readLine()) != null) {
                         line = line.trim();
-
+                        writer.println("Entrez la colonne (1-7) ou QUIT pour quitter :"); 
                         // Si le joueur tape QUIT en pleine partie
                         if (line.equalsIgnoreCase("QUIT")) {
                             writer.println("Au revoir !");
