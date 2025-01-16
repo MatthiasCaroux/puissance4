@@ -153,4 +153,17 @@ public class Partie {
         sb.append("---------------------------\n");
         broadcastMessage(sb.toString());
     }
-}
+    
+    public boolean getFini(){
+        return this.fini;
+    }
+    public void terminerPartie(){
+        this.fini = true;
+    }
+
+    public String getJoueurs() {
+        for (PrintWriter client : clients) {
+            return client.toString();
+        }
+        return "";
+    }
