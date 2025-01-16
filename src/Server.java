@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Server {
     // Liste de toutes les parties existantes
     private final List<Partie> parties = new ArrayList<>();
-    // Liste globale des flux de tous les clients connectés (facultatif si on veut diffuser un message à tout le monde)
+    // Liste globale des flux de tous les clients connectés 
     private final List<PrintWriter> clients = new CopyOnWriteArrayList<>();
 
     public void startServer(int port) {
@@ -25,9 +25,7 @@ public class Server {
         }
     }
 
-    /**
-     * Thread gérant la conversation avec UN client précis.
-     */
+
     private class ClientHandler implements Runnable {
         private final Socket clientSocket;
         private PrintWriter writer;
@@ -57,10 +55,10 @@ public class Server {
                 writer.println(" - 'LISTE' pour voir les parties existantes");
                 writer.println(" - 'QUIT' pour vous déconnecter");
 
-                // Ajoute le flux à la liste globale (facultatif)
+                // Ajoute le flux à la liste globale 
                 clients.add(writer);
 
-                // Boucle "infinie" du lobby : tant que le client n'a pas rejoint/créé une partie
+
                 while (true) {
                     showLobbyMenu();  // Montre le petit menu du lobby
 
@@ -112,7 +110,7 @@ public class Server {
                     }
 
                     // Ici, on sort de la boucle du lobby parce qu'on a créé/rejoint une partie
-                    // => on gère maintenant la boucle "de partie"
+                    
                     while (currentPartie != null && !currentPartie.getFini() && (line = reader.readLine()) != null) {
                         line = line.trim();
                         writer.println("Entrez la colonne (1-7) ou QUIT pour quitter :"); 
@@ -138,7 +136,7 @@ public class Server {
                 e.printStackTrace();
             }
             finally {
-                // Nettoyage
+                
                 clients.remove(writer);
                 try {
                     clientSocket.close();
@@ -148,17 +146,13 @@ public class Server {
             }
         }
 
-        /**
-         * Envoie un petit menu de lobby au joueur.
-         */
+
         private void showLobbyMenu() {
             writer.println("\n--- Menu du Lobby ---");
             writer.println("Tapez 'nouvelle' pour créer une partie, 'LISTE' pour voir les parties, un ID pour rejoindre, ou 'QUIT' pour quitter.");
         }
 
-        /**
-         * Affiche la liste des parties existantes et leur état.
-         */
+
         private void afficherListeParties() {
             writer.println("--- Liste des parties ---");
             if (parties.isEmpty()) {
